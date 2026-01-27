@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontakt - Sports Games Archive</title>
+    
+    <!-- GoatCounter Analytics -->
+    <script data-goatcounter="https://tabletop-sports-games.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #f1f1f1;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        h1 {
+            fontSize: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin: 0;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 50%, #6bcf7f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.02em;
+        }
+        
+        nav {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f1f1f1;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        nav a.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .contact-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+        }
+        
+        .contact-intro {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        .contact-intro h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #f1f1f1;
+        }
+        
+        .contact-intro p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: #f1f1f1;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%);
+            border: none;
+            border-radius: 12px;
+            color: #1a1a2e;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+        
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+        
+        .success-message {
+            display: none;
+            background: rgba(107, 207, 127, 0.2);
+            border: 1px solid rgba(107, 207, 127, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+            color: #6bcf7f;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .contact-info {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #f1f1f1;
+        }
+        
+        .contact-info p {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+        
+        footer {
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 1rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-top: 4rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            nav {
+                width: 100%;
+            }
+            
+            nav a {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .contact-card {
+                padding: 2rem 1.5rem;
+            }
+            
+            .contact-intro h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Sports Games Archive</h1>
+            </div>
+            
+            <nav>
+                <a href="index.html">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Home
+                </a>
+                <a href="contact.html" class="active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    Kontakt
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="contact-card">
+            <div class="contact-intro">
+                <h2>Kontaktiere uns</h2>
+                <p>Hast du Fragen, Vorschläge oder möchtest du dein eigenes Spiel einreichen?<br>Wir freuen uns auf deine Nachricht!</p>
+            </div>
+
+            <!-- 
+                ANLEITUNG: Formspree Setup
+                1. Gehe zu https://formspree.io/
+                2. Erstelle einen kostenlosen Account
+                3. Erstelle ein neues Formular
+                4. Ersetze 'DEIN-FORMSPREE-ID' unten mit deiner ID
+                
+                Beispiel: https://formspree.io/f/xyzabc123
+            -->
+            <form action="https://formspree.io/f/mgokpqnj" method="POST" id="contact-form">
+                <div class="form-group">
+                    <label for="name">Name *</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        required 
+                        placeholder="Dein Name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">E-Mail *</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        placeholder="deine.email@beispiel.de"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Betreff</label>
+                    <input 
+                        type="text" 
+                        id="subject" 
+                        name="subject" 
+                        placeholder="Worum geht es?"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Nachricht *</label>
+                    <textarea 
+                        id="message" 
+                        name="message" 
+                        required 
+                        placeholder="Deine Nachricht an uns..."
+                    ></textarea>
+                </div>
+
+                <!-- Honeypot field (spam protection) -->
+                <input type="text" name="_gotcha" style="display:none">
+
+                <button type="submit">Nachricht senden</button>
+            </form>
+
+            <div class="success-message" id="success-message">
+                ✓ Vielen Dank! Deine Nachricht wurde erfolgreich gesendet.<br>
+                Wir melden uns so schnell wie möglich bei dir.
+            </div>
+
+            <div class="contact-info">
+                <h3>Weitere Informationen</h3>
+                <p>
+                    Antworten innerhalb von 24-48 Stunden<br>
+                    Alle Spiele-Einreichungen werden geprüft<br>
+                    Community-Feedback ist immer willkommen
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Sports Games Archive © 2025 - Deine Community für analoge Sport-Simulationen</p>
+    </footer>
+
+    <script>
+        // Form submission handling
+        const form = document.getElementById('contact-form');
+        const successMessage = document.getElementById('success-message');
+
+        form.addEventListener('submit', function(e) {
+            // Let Formspree handle the submission
+            // After successful submission, Formspree will redirect or show a message
+            
+            // Optional: Show success message if Formspree AJAX mode is enabled
+            setTimeout(() => {
+                if (window.location.search.includes('success=true')) {
+                    form.style.display = 'none';
+                    successMessage.style.display = 'block';
+                }
+            }, 100);
+        });
+
+        // Check URL for success parameter (if redirected back with ?success=true)
+        if (window.location.search.includes('success=true')) {
+            form.style.display = 'none';
+            successMessage.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
