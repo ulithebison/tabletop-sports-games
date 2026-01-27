@@ -1,0 +1,11 @@
+# Environment variables (API Keys)
+supabase-config.js
+
+# Netlify
+.netlify/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db

@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabletop Sports Games Archive - Tabletop, Dice & Card Database</title>
+    <title>Tabletop Sports Games Archive</title>
+    
+    <!-- Supabase Client Library - KORRIGIERTER LINK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <!-- React -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- GoatCounter Analytics - ANLEITUNG: Ersetze 'DEIN-CODE' mit deinem GoatCounter Code -->
-    <!-- Setup auf: https://www.goatcounter.com -->
+    <!-- GoatCounter Analytics -->
     <script data-goatcounter="https://tabletop-sports-games.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
     
@@ -27,138 +31,211 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f1f1f1;
+            font-size: 1.5rem;
+        }
+        .error {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ff6b6b;
+            font-size: 1.2rem;
+            padding: 2rem;
+            text-align: center;
+        }
+        .error-details {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            borderRadius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            max-width: 600px;
+            font-size: 0.9rem;
+            font-family: monospace;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
+    <!-- Supabase Config laden -->
+    <script src="supabase-config.js"></script>
+
     <script type="text/babel">
         const { useState, useMemo, useEffect } = React;
 
-        // Lucide Icons as inline SVG components
-        const Search = ({ size = 24, style, ...props }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+        // Lucide Icons
+        const Search = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="m21 21-4.35-4.35"></path>
             </svg>
         );
 
-        const Download = ({ size = 24, style, ...props }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-        );
-
-        const Filter = ({ size = 24, style, ...props }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+        const Filter = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
             </svg>
         );
 
-        const Mail = ({ size = 24, style, ...props }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+        const Mail = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                 <polyline points="22,6 12,13 2,6"></polyline>
             </svg>
         );
 
-        const Home = ({ size = 24, style, ...props }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={style} {...props}>
+        const Home = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
         );
 
-        // GoatCounter Event Tracking Helper
-        const trackEvent = (eventName, gameId = null, gameName = null) => {
-            if (window.goatcounter && window.goatcounter.count) {
-                const path = gameId ? `/game/${gameId}/${gameName}` : `/${eventName}`;
-                window.goatcounter.count({
-                    path: path,
-                    title: eventName,
-                    event: true
-                });
-            }
-        };
-
-        // SPIELE-DATEN - HIER FÜGST DU DEINE SPIELE HINZU!
-        // NEU: videoUrl Feld für YouTube Videos (optional)
-        const GAMES_DATA = [
-            {
-                id: 1,
-                name: "Second Season Football",
-                sport: "American Football",
-                type: "Tabletop",
-                year: 2020,
-                complexity: "Medium",
-                players: "1-2",
-                description: "Ein strategisches Tabletop-Football-Spiel, das die Spannung der NFL mit taktischer Tiefe verbindet. Nutze Würfelwürfe und strategische Entscheidungen, um dein Team zum Sieg zu führen.",
-                review: "Second Season Football bietet eine perfekte Balance zwischen Zugänglichkeit und Tiefe. Die Mechaniken sind schnell zu lernen, aber die strategischen Möglichkeiten sind endlos. Besonders gelungen ist das Play-Calling-System, das echte Football-Taktiken abbildet.",
-                rating: 4.5,
-                images: [
-                    "https://via.placeholder.com/800x600/2c5f2d/ffffff?text=Second+Season+Football+Board",
-                    "https://via.placeholder.com/800x600/1a472a/ffffff?text=Game+Components",
-                    "https://via.placeholder.com/800x600/234e2c/ffffff?text=Playbook"
-                ],
-                downloads: [
-                    { name: "Regelwerk (PDF)", size: "2.5 MB", url: "#" },
-                    { name: "Spielbogen (Excel)", size: "450 KB", url: "#" },
-                    { name: "Zusatzmaterial", size: "1.2 MB", url: "#" }
-                ],
-                videoUrl: "" // Optional: YouTube Embed URL z.B. "https://www.youtube-nocookie.com/embed/VIDEO-ID"
-
-            }
-        ];
-
-        const SPORTS = ["Alle", "American Football", "Baseball", "Hockey", "Basketball", "Soccer"];
-        const TYPES = ["Alle", "Tabletop", "Dice", "Card"];
-        const COMPLEXITY_LEVELS = ["Alle", "Simple", "Medium", "Complex"];
-
+        // Main App
         function SportsGamesDatabase() {
+            const [games, setGames] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
             const [selectedGame, setSelectedGame] = useState(null);
             const [searchTerm, setSearchTerm] = useState("");
-            const [selectedSport, setSelectedSport] = useState("Alle");
-            const [selectedType, setSelectedType] = useState("Alle");
-            const [selectedComplexity, setSelectedComplexity] = useState("Alle");
+            const [selectedSport, setSelectedSport] = useState("All");
+            const [selectedType, setSelectedType] = useState("All");
+            const [selectedComplexity, setSelectedComplexity] = useState("All");
             const [showFilters, setShowFilters] = useState(false);
-            const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+            useEffect(() => {
+                loadGames();
+            }, []);
+
+            async function loadGames() {
+                try {
+                    setLoading(true);
+                    setError(null);
+
+                    // Check if supabase client exists
+                    if (typeof window.supabaseClient === 'undefined') {
+                        throw new Error('Supabase not connected. Check your supabase-config.js file and API keys.');
+                    }
+
+                    console.log('Loading games from Supabase...');
+                    
+                    const { data, error: fetchError } = await window.supabaseClient
+                        .from('games')
+                        .select('*')
+                        .order('name');
+
+                    if (fetchError) {
+                        console.error('Supabase error:', fetchError);
+                        throw fetchError;
+                    }
+
+                    console.log('✅ Loaded', data?.length || 0, 'games');
+                    setGames(data || []);
+                    
+                } catch (err) {
+                    console.error('❌ Error loading games:', err);
+                    setError(err.message || 'Unknown error');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            // Get unique values for filters
+            const sports = useMemo(() => {
+                const unique = [...new Set(games.map(g => g.sport))].filter(Boolean);
+                return ["All", ...unique.sort()];
+            }, [games]);
+
+            const types = useMemo(() => {
+                const unique = [...new Set(games.map(g => g.type))].filter(Boolean);
+                return ["All", ...unique.sort()];
+            }, [games]);
+
+            const complexityLevels = useMemo(() => {
+                const unique = [...new Set(games.map(g => g.complexity))].filter(Boolean);
+                return ["All", ...unique.sort()];
+            }, [games]);
+
+            // Filter games
             const filteredGames = useMemo(() => {
-                return GAMES_DATA.filter(game => {
-                    const matchesSearch = game.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        game.description.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesSport = selectedSport === "Alle" || game.sport === selectedSport;
-                    const matchesType = selectedType === "Alle" || game.type === selectedType;
-                    const matchesComplexity = selectedComplexity === "Alle" || game.complexity === selectedComplexity;
+                return games.filter(game => {
+                    const matchesSearch = game.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        game.description?.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesSport = selectedSport === "All" || game.sport === selectedSport;
+                    const matchesType = selectedType === "All" || game.type === selectedType;
+                    const matchesComplexity = selectedComplexity === "All" || game.complexity === selectedComplexity;
                     
                     return matchesSearch && matchesSport && matchesType && matchesComplexity;
                 });
-            }, [searchTerm, selectedSport, selectedType, selectedComplexity]);
+            }, [games, searchTerm, selectedSport, selectedType, selectedComplexity]);
 
-            const activeFiltersCount = [selectedSport, selectedType, selectedComplexity].filter(f => f !== "Alle").length;
+            const activeFiltersCount = [selectedSport, selectedType, selectedComplexity].filter(f => f !== "All").length;
 
-            if (selectedGame) {
-                return <GameDetail 
-                    game={selectedGame} 
-                    onBack={() => {
-                        setSelectedGame(null);
-                        setCurrentImageIndex(0);
-                    }}
-                    currentImageIndex={currentImageIndex}
-                    setCurrentImageIndex={setCurrentImageIndex}
-                />;
+            // Loading
+            if (loading) {
+                return (
+                    <div className="loading">
+                        <div>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎲</div>
+                            <div>Loading games from database...</div>
+                        </div>
+                    </div>
+                );
             }
 
+            // Error
+            if (error) {
+                return (
+                    <div className="error">
+                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+                        <div>Error loading games</div>
+                        <div className="error-details">
+                            <strong>Error:</strong> {error}
+                            <br/><br/>
+                            <strong>Troubleshooting:</strong>
+                            <br/>1. Check if supabase-config.js exists
+                            <br/>2. Check if API keys are correct
+                            <br/>3. Check browser console (F12)
+                        </div>
+                        <button 
+                            onClick={loadGames}
+                            style={{
+                                marginTop: '2rem',
+                                padding: '1rem 2rem',
+                                background: '#ff6b6b',
+                                border: 'none',
+                                borderRadius: '12px',
+                                color: '#fff',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                );
+            }
+
+            // Main view
             return (
                 <div style={{
                     minHeight: '100vh',
                     background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                    fontFamily: "'Inter', -apple-system, sans-serif",
                     color: '#f1f1f1'
                 }}>
-                    {/* Header with Navigation */}
+                    {/* Header */}
                     <header style={{
                         background: 'rgba(255, 255, 255, 0.05)',
                         backdropFilter: 'blur(10px)',
@@ -177,70 +254,46 @@
                                 gap: '1rem',
                                 marginBottom: '1rem'
                             }}>
-                                <div>
-                                    <h1 style={{
-                                        fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-                                        fontWeight: '900',
-                                        margin: '0',
-                                        background: 'linear-gradient(135deg, #ff6b6b 0%, #ffd93d 50%, #6bcf7f 100%)',
-                                        WebkitBackgroundClip: 'text',
-                                        WebkitTextFillColor: 'transparent',
-                                        backgroundClip: 'text',
-                                        letterSpacing: '-0.02em'
-                                    }}>
-                                        Tabletop Sports Games Archive
-                                    </h1>
-                                </div>
-                                
-                                {/* Navigation */}
-                                <nav style={{
-                                    display: 'flex',
-                                    gap: '1rem',
-                                    alignItems: 'center'
+                                <h1 style={{
+                                    fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                                    fontWeight: '900',
+                                    margin: '0',
+                                    background: 'linear-gradient(135deg, #ff6b6b 0%, #ffd93d 50%, #6bcf7f 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    letterSpacing: '-0.02em'
                                 }}>
-                                    <a 
-                                        href="index.html"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            padding: '0.75rem 1.25rem',
-                                            background: 'rgba(255, 255, 255, 0.1)',
-                                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                                            borderRadius: '12px',
-                                            color: '#f1f1f1',
-                                            textDecoration: 'none',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            transition: 'all 0.3s ease'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.15)'}
-                                        onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
-                                    >
-                                        <Home size={20} />
-                                        Home
+                                    Tabletop Sports Games Archive
+                                </h1>
+                                
+                                <nav style={{ display: 'flex', gap: '1rem' }}>
+                                    <a href="index.html" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.75rem 1.25rem',
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        borderRadius: '12px',
+                                        color: '#f1f1f1',
+                                        textDecoration: 'none',
+                                        fontWeight: '600'
+                                    }}>
+                                        <Home size={20} /> Home
                                     </a>
-                                    <a 
-                                        href="contact.html"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            padding: '0.75rem 1.25rem',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: '12px',
-                                            color: '#f1f1f1',
-                                            textDecoration: 'none',
-                                            fontSize: '1rem',
-                                            fontWeight: '600',
-                                            transition: 'all 0.3s ease'
-                                        }}
-                                        onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.08)'}
-                                        onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
-                                    >
-                                        <Mail size={20} />
-                                        Kontakt
+                                    <a href="contact.html" style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        padding: '0.75rem 1.25rem',
+                                        background: 'rgba(255, 255, 255, 0.05)',
+                                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '12px',
+                                        color: '#f1f1f1',
+                                        textDecoration: 'none',
+                                        fontWeight: '600'
+                                    }}>
+                                        <Mail size={20} /> Contact
                                     </a>
                                 </nav>
                             </div>
@@ -248,34 +301,27 @@
                             <p style={{
                                 fontSize: '1.1rem',
                                 color: 'rgba(255, 255, 255, 0.7)',
-                                margin: 0,
-                                fontWeight: '400'
+                                margin: 0
                             }}>
-                                Your database for Tabletop, Dice & Card Sports Games
+                                Your database for tabletop, dice & card sports games
                             </p>
                         </div>
                     </header>
 
                     <div style={{ maxWidth: '1400px', margin: '2rem auto', padding: '0 1rem' }}>
-                        <div style={{
-                            display: 'flex',
-                            gap: '1rem',
-                            flexWrap: 'wrap',
-                            marginBottom: '1.5rem'
-                        }}>
+                        {/* Search & Filters */}
+                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
                             <div style={{ flex: '1', minWidth: '250px', position: 'relative' }}>
                                 <Search style={{
                                     position: 'absolute',
                                     left: '1rem',
                                     top: '50%',
                                     transform: 'translateY(-50%)',
-                                    color: 'rgba(255, 255, 255, 0.4)',
-                                    width: '20px',
-                                    height: '20px'
+                                    color: 'rgba(255, 255, 255, 0.4)'
                                 }} />
                                 <input
                                     type="text"
-                                    placeholder="Spiele durchsuchen..."
+                                    placeholder="Search games..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     style={{
@@ -286,29 +332,23 @@
                                         borderRadius: '12px',
                                         color: '#f1f1f1',
                                         fontSize: '1rem',
-                                        outline: 'none',
-                                        transition: 'all 0.3s ease'
+                                        outline: 'none'
                                     }}
                                 />
                             </div>
 
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                style={{
-                                    padding: '1rem 1.5rem',
-                                    background: activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                                    border: `1px solid ${activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
-                                    borderRadius: '12px',
-                                    color: '#f1f1f1',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    fontSize: '1rem',
-                                    fontWeight: '600',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
+                            <button onClick={() => setShowFilters(!showFilters)} style={{
+                                padding: '1rem 1.5rem',
+                                background: activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                border: `1px solid ${activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                borderRadius: '12px',
+                                color: '#f1f1f1',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontWeight: '600'
+                            }}>
                                 <Filter size={20} />
                                 Filter {activeFiltersCount > 0 && `(${activeFiltersCount})`}
                             </button>
@@ -317,48 +357,32 @@
                         {showFilters && (
                             <div style={{
                                 background: 'rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(10px)',
                                 border: '1px solid rgba(255, 255, 255, 0.1)',
                                 borderRadius: '12px',
                                 padding: '1.5rem',
-                                marginBottom: '2rem'
+                                marginBottom: '2rem',
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                gap: '1.5rem'
                             }}>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                    gap: '1.5rem'
-                                }}>
-                                    <FilterGroup label="Sport" options={SPORTS} selected={selectedSport} onChange={setSelectedSport} />
-                                    <FilterGroup label="Spieltyp" options={TYPES} selected={selectedType} onChange={setSelectedType} />
-                                    <FilterGroup label="Komplexität" options={COMPLEXITY_LEVELS} selected={selectedComplexity} onChange={setSelectedComplexity} />
-                                </div>
+                                <FilterGroup label="Sport" options={sports} selected={selectedSport} onChange={setSelectedSport} />
+                                <FilterGroup label="Type" options={types} selected={selectedType} onChange={setSelectedType} />
+                                <FilterGroup label="Complexity" options={complexityLevels} selected={selectedComplexity} onChange={setSelectedComplexity} />
                             </div>
                         )}
 
-                        <p style={{
-                            color: 'rgba(255, 255, 255, 0.6)',
-                            marginBottom: '1.5rem',
-                            fontSize: '0.95rem'
-                        }}>
-                            {filteredGames.length} {filteredGames.length === 1 ? 'Spiel gefunden' : 'Spiele gefunden'}
+                        <p style={{ color: 'rgba(255, 255, 255, 0.6)', marginBottom: '1.5rem' }}>
+                            {filteredGames.length} game{filteredGames.length !== 1 ? 's' : ''} found
                         </p>
 
+                        {/* Games Grid */}
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                            gap: '2rem',
-                            marginBottom: '3rem'
+                            gap: '2rem'
                         }}>
-                            {filteredGames.map((game, index) => (
-                                <GameCard 
-                                    key={game.id} 
-                                    game={game} 
-                                    onClick={() => {
-                                        setSelectedGame(game);
-                                        trackEvent('game-click', game.id, game.name);
-                                    }}
-                                    index={index}
-                                />
+                            {filteredGames.map(game => (
+                                <GameCard key={game.id} game={game} />
                             ))}
                         </div>
 
@@ -368,22 +392,11 @@
                                 padding: '4rem 1rem',
                                 color: 'rgba(255, 255, 255, 0.5)'
                             }}>
-                                <p style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>Keine Spiele gefunden</p>
-                                <p style={{ fontSize: '0.95rem' }}>Versuche andere Suchbegriffe oder Filter</p>
+                                <p style={{ fontSize: '1.2rem' }}>No games found</p>
+                                <p>Try different search terms or filters</p>
                             </div>
                         )}
                     </div>
-
-                    <footer style={{
-                        background: 'rgba(0, 0, 0, 0.3)',
-                        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                        padding: '2rem 1rem',
-                        textAlign: 'center',
-                        color: 'rgba(255, 255, 255, 0.5)',
-                        fontSize: '0.9rem'
-                    }}>
-                        <p>Tabletop Sports Games Archive © 2026 - Your community for Tabletop Sports Games!</p>
-                    </footer>
                 </div>
             );
         }
@@ -397,71 +410,55 @@
                         fontWeight: '600',
                         color: 'rgba(255, 255, 255, 0.7)',
                         marginBottom: '0.5rem',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
+                        textTransform: 'uppercase'
                     }}>
                         {label}
                     </label>
-                    <select
-                        value={selected}
-                        onChange={(e) => onChange(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '8px',
-                            color: '#f1f1f1',
-                            fontSize: '0.95rem',
-                            cursor: 'pointer',
-                            outline: 'none'
-                        }}
-                    >
-                        {options.map(option => (
-                            <option key={option} value={option} style={{ background: '#16213e' }}>
-                                {option}
-                            </option>
+                    <select value={selected} onChange={(e) => onChange(e.target.value)} style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '8px',
+                        color: '#f1f1f1',
+                        cursor: 'pointer',
+                        outline: 'none'
+                    }}>
+                        {options.map(opt => (
+                            <option key={opt} value={opt} style={{ background: '#16213e' }}>{opt}</option>
                         ))}
                     </select>
                 </div>
             );
         }
 
-        function GameCard({ game, onClick, index }) {
+        function GameCard({ game }) {
             const [isHovered, setIsHovered] = useState(false);
+            const imageUrl = game.images?.[0] || 'https://via.placeholder.com/800x600/333333/ffffff?text=No+Image';
 
             return (
                 <div
-                    onClick={onClick}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                     style={{
                         background: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
                         border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '16px',
                         overflow: 'hidden',
                         cursor: 'pointer',
-                        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: isHovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
-                        boxShadow: isHovered 
-                            ? '0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2)' 
-                            : '0 4px 12px rgba(0, 0, 0, 0.2)'
+                        transition: 'all 0.3s',
+                        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)'
                     }}
                 >
                     <div style={{
                         height: '200px',
-                        background: `url(${game.images[0]}) center/cover`,
-                        position: 'relative',
-                        overflow: 'hidden'
+                        background: `url(${imageUrl}) center/cover`,
+                        position: 'relative'
                     }}>
                         <div style={{
                             position: 'absolute',
                             inset: 0,
-                            background: isHovered 
-                                ? 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%)'
-                                : 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
-                            transition: 'all 0.4s ease'
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)'
                         }} />
                         
                         <div style={{
@@ -474,37 +471,19 @@
                             borderRadius: '20px',
                             fontSize: '0.75rem',
                             fontWeight: '700',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
+                            textTransform: 'uppercase'
                         }}>
                             {game.type}
                         </div>
                     </div>
 
                     <div style={{ padding: '1.5rem' }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            marginBottom: '0.5rem'
-                        }}>
-                            <span style={{
-                                fontSize: '0.85rem',
-                                color: '#ffd93d',
-                                fontWeight: '600'
-                            }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.85rem', color: '#ffd93d', fontWeight: '600' }}>
                                 {game.sport}
                             </span>
-                            <span style={{
-                                color: 'rgba(255, 255, 255, 0.3)',
-                                fontSize: '0.85rem'
-                            }}>
-                                •
-                            </span>
-                            <span style={{
-                                fontSize: '0.85rem',
-                                color: 'rgba(255, 255, 255, 0.5)'
-                            }}>
+                            <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+                            <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
                                 {game.year}
                             </span>
                         </div>
@@ -513,16 +492,25 @@
                             fontSize: '1.4rem',
                             fontWeight: '700',
                             margin: '0 0 0.75rem 0',
-                            color: '#f1f1f1',
                             lineHeight: '1.3'
                         }}>
                             {game.name}
                         </h3>
 
+                        {game.subtitle && (
+                            <p style={{
+                                fontSize: '0.9rem',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                margin: '0 0 0.75rem 0',
+                                fontStyle: 'italic'
+                            }}>
+                                {game.subtitle}
+                            </p>
+                        )}
+
                         <p style={{
                             fontSize: '0.95rem',
                             color: 'rgba(255, 255, 255, 0.7)',
-                            margin: '0 0 1rem 0',
                             lineHeight: '1.5',
                             display: '-webkit-box',
                             WebkitLineClamp: 3,
@@ -535,484 +523,20 @@
                         <div style={{
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center',
                             paddingTop: '1rem',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+                            marginTop: '1rem',
+                            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                            fontSize: '0.85rem',
+                            color: 'rgba(255, 255, 255, 0.6)'
                         }}>
-                            <div style={{
-                                display: 'flex',
-                                gap: '0.5rem',
-                                fontSize: '0.85rem',
-                                color: 'rgba(255, 255, 255, 0.6)'
-                            }}>
-                                <span>👥 {game.players}</span>
-                                <span>•</span>
-                                <span>📊 {game.complexity}</span>
-                            </div>
-                            
-                            <div style={{
-                                color: '#ffd93d',
-                                fontSize: '0.9rem',
-                                fontWeight: '600'
-                            }}>
-                                ★ {game.rating}
-                            </div>
+                            <span>👥 {game.players}</span>
+                            <span>📊 {game.complexity}</span>
                         </div>
                     </div>
                 </div>
             );
         }
 
-        function GameDetail({ game, onBack, currentImageIndex, setCurrentImageIndex }) {
-            useEffect(() => {
-                // Load Giscus comments when game detail opens
-                const script = document.createElement('script');
-                script.src = 'https://giscus.app/client.js';
-                script.setAttribute('data-repo', 'ulithebison/tabletop-sports-games'); // ANLEITUNG: Ersetze mit deinem GitHub Repo
-                script.setAttribute('data-repo-id', 'R_kgDORB2YZQ'); // Von giscus.app generieren lassen
-                script.setAttribute('data-category', 'Announcements');
-                script.setAttribute('data-category-id', 'DIC_kwDORB2YZc4C1fL1'); // Von giscus.app generieren lassen
-                script.setAttribute('data-mapping', 'specific');
-                script.setAttribute('data-term', `game-${game.id}-${game.name}`);
-                script.setAttribute('data-strict', '0');
-                script.setAttribute('data-reactions-enabled', '1');
-                script.setAttribute('data-emit-metadata', '1');
-                script.setAttribute('data-input-position', 'top');
-                script.setAttribute('data-theme', 'dark');
-                script.setAttribute('data-lang', 'en');
-                script.setAttribute('crossorigin', 'anonymous');
-                script.async = true;
-
-                const commentsContainer = document.getElementById('giscus-comments');
-                if (commentsContainer) {
-                    commentsContainer.innerHTML = '';
-                    commentsContainer.appendChild(script);
-                }
-
-                return () => {
-                    if (commentsContainer) {
-                        commentsContainer.innerHTML = '';
-                    }
-                };
-            }, [game.id, game.name]);
-
-            return (
-                <div style={{
-                    minHeight: '100vh',
-                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                    color: '#f1f1f1'
-                }}>
-                    <div style={{
-                        padding: '2rem 1rem',
-                        maxWidth: '1200px',
-                        margin: '0 auto'
-                    }}>
-                        <button
-                            onClick={onBack}
-                            style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '12px',
-                                padding: '0.75rem 1.5rem',
-                                color: '#f1f1f1',
-                                cursor: 'pointer',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            ← Zurück zur Übersicht
-                        </button>
-                    </div>
-
-                    <div style={{
-                        maxWidth: '1200px',
-                        margin: '0 auto',
-                        padding: '0 1rem 3rem 1rem'
-                    }}>
-                        {/* Game Header */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            padding: '2rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                gap: '1rem',
-                                flexWrap: 'wrap',
-                                marginBottom: '1rem'
-                            }}>
-                                <span style={{
-                                    background: 'rgba(255, 215, 61, 0.2)',
-                                    color: '#ffd93d',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '20px',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600'
-                                }}>
-                                    {game.sport}
-                                </span>
-                                <span style={{
-                                    background: 'rgba(255, 255, 255, 0.1)',
-                                    color: '#f1f1f1',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '20px',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600'
-                                }}>
-                                    {game.type}
-                                </span>
-                                <span style={{
-                                    background: 'rgba(107, 207, 127, 0.2)',
-                                    color: '#6bcf7f',
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '20px',
-                                    fontSize: '0.9rem',
-                                    fontWeight: '600'
-                                }}>
-                                    {game.complexity}
-                                </span>
-                            </div>
-
-                            <h1 style={{
-                                fontSize: 'clamp(2rem, 4vw, 3rem)',
-                                fontWeight: '900',
-                                margin: '0 0 1rem 0',
-                                letterSpacing: '-0.02em'
-                            }}>
-                                {game.name}
-                            </h1>
-
-                            <div style={{
-                                display: 'flex',
-                                gap: '2rem',
-                                flexWrap: 'wrap',
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                fontSize: '1rem'
-                            }}>
-                                <div>
-                                    <span style={{ opacity: 0.6 }}>Jahr:</span> <strong>{game.year}</strong>
-                                </div>
-                                <div>
-                                    <span style={{ opacity: 0.6 }}>Spieler:</span> <strong>{game.players}</strong>
-                                </div>
-                                <div>
-                                    <span style={{ opacity: 0.6 }}>Bewertung:</span> <strong style={{ color: '#ffd93d' }}>★ {game.rating}/5</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* YouTube Video (if available) */}
-                        {game.videoUrl && (
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                padding: '2rem',
-                                marginBottom: '2rem'
-                            }}>
-                                <h2 style={{
-                                    fontSize: '1.5rem',
-                                    fontWeight: '700',
-                                    marginBottom: '1.5rem'
-                                }}>
-                                    Video
-                                </h2>
-                                <div style={{
-                                    position: 'relative',
-                                    paddingBottom: '56.25%', // 16:9 Aspect Ratio
-                                    height: 0,
-                                    overflow: 'hidden',
-                                    borderRadius: '12px'
-                                }}>
-                                    <iframe
-                                        src={game.videoUrl}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            border: 'none'
-                                        }}
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Image Gallery */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            padding: '2rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <h2 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                marginBottom: '1.5rem'
-                            }}>
-                                Screenshots
-                            </h2>
-
-                            <div style={{
-                                position: 'relative',
-                                borderRadius: '12px',
-                                overflow: 'hidden',
-                                marginBottom: '1rem'
-                            }}>
-                                <img
-                                    src={game.images[currentImageIndex]}
-                                    alt={`${game.name} Screenshot ${currentImageIndex + 1}`}
-                                    style={{
-                                        width: '100%',
-                                        height: 'auto',
-                                        display: 'block'
-                                    }}
-                                />
-                                
-                                {game.images.length > 1 && (
-                                    <>
-                                        <button
-                                            onClick={() => setCurrentImageIndex((currentImageIndex - 1 + game.images.length) % game.images.length)}
-                                            style={{
-                                                position: 'absolute',
-                                                left: '1rem',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'rgba(0, 0, 0, 0.7)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '48px',
-                                                height: '48px',
-                                                color: '#fff',
-                                                fontSize: '1.5rem',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                        >
-                                            ‹
-                                        </button>
-                                        <button
-                                            onClick={() => setCurrentImageIndex((currentImageIndex + 1) % game.images.length)}
-                                            style={{
-                                                position: 'absolute',
-                                                right: '1rem',
-                                                top: '50%',
-                                                transform: 'translateY(-50%)',
-                                                background: 'rgba(0, 0, 0, 0.7)',
-                                                backdropFilter: 'blur(10px)',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '48px',
-                                                height: '48px',
-                                                color: '#fff',
-                                                fontSize: '1.5rem',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                        >
-                                            ›
-                                        </button>
-                                    </>
-                                )}
-                            </div>
-
-                            {game.images.length > 1 && (
-                                <div style={{
-                                    display: 'flex',
-                                    gap: '0.5rem',
-                                    justifyContent: 'center'
-                                }}>
-                                    {game.images.map((_, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setCurrentImageIndex(index)}
-                                            style={{
-                                                width: '12px',
-                                                height: '12px',
-                                                borderRadius: '50%',
-                                                border: 'none',
-                                                background: index === currentImageIndex 
-                                                    ? 'rgba(255, 255, 255, 0.8)' 
-                                                    : 'rgba(255, 255, 255, 0.3)',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s ease'
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Description & Review */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                            gap: '2rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                padding: '2rem'
-                            }}>
-                                <h2 style={{
-                                    fontSize: '1.5rem',
-                                    fontWeight: '700',
-                                    marginBottom: '1rem'
-                                }}>
-                                    Beschreibung
-                                </h2>
-                                <p style={{
-                                    fontSize: '1.05rem',
-                                    lineHeight: '1.7',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    margin: 0
-                                }}>
-                                    {game.description}
-                                </p>
-                            </div>
-
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(10px)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '20px',
-                                padding: '2rem'
-                            }}>
-                                <h2 style={{
-                                    fontSize: '1.5rem',
-                                    fontWeight: '700',
-                                    marginBottom: '1rem'
-                                }}>
-                                    Review
-                                </h2>
-                                <p style={{
-                                    fontSize: '1.05rem',
-                                    lineHeight: '1.7',
-                                    color: 'rgba(255, 255, 255, 0.8)',
-                                    margin: 0
-                                }}>
-                                    {game.review}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Downloads */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            padding: '2rem',
-                            marginBottom: '2rem'
-                        }}>
-                            <h2 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                marginBottom: '1.5rem'
-                            }}>
-                                Downloads
-                            </h2>
-                            <div style={{
-                                display: 'grid',
-                                gap: '1rem'
-                            }}>
-                                {game.downloads.map((download, index) => (
-                                    <a
-                                        key={index}
-                                        href={download.url}
-                                        onClick={() => trackEvent('download-click', game.id, download.name)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: '1.25rem',
-                                            background: 'rgba(255, 255, 255, 0.05)',
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            borderRadius: '12px',
-                                            color: '#f1f1f1',
-                                            textDecoration: 'none',
-                                            transition: 'all 0.3s ease'
-                                        }}
-                                    >
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '1rem'
-                                        }}>
-                                            <Download size={24} style={{ color: '#6bcf7f' }} />
-                                            <div>
-                                                <div style={{
-                                                    fontSize: '1.05rem',
-                                                    fontWeight: '600',
-                                                    marginBottom: '0.25rem'
-                                                }}>
-                                                    {download.name}
-                                                </div>
-                                                <div style={{
-                                                    fontSize: '0.85rem',
-                                                    color: 'rgba(255, 255, 255, 0.5)'
-                                                }}>
-                                                    {download.size}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span style={{
-                                            fontSize: '1.5rem',
-                                            color: 'rgba(255, 255, 255, 0.3)'
-                                        }}>
-                                            →
-                                        </span>
-                                    </a>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Giscus Comments */}
-                        <div style={{
-                            background: 'rgba(255, 255, 255, 0.05)',
-                            backdropFilter: 'blur(10px)',
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            borderRadius: '20px',
-                            padding: '2rem'
-                        }}>
-                            <h2 style={{
-                                fontSize: '1.5rem',
-                                fontWeight: '700',
-                                marginBottom: '1.5rem'
-                            }}>
-                                Kommentare
-                            </h2>
-                            <div id="giscus-comments"></div>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // Render the app
         ReactDOM.render(<SportsGamesDatabase />, document.getElementById('root'));
     </script>
 </body>
