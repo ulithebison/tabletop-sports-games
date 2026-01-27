@@ -288,7 +288,7 @@
                 
                 Beispiel: https://formspree.io/f/xyzabc123
             -->
-            <form action="https://formspree.io/f/mgokpqnj" method="POST" id="contact-form">
+            <form name="contact" method="POST" data-netlify="true" id="contact-form">
                 <div class="form-group">
                     <label for="name">Name *</label>
                     <input 
@@ -332,7 +332,8 @@
                 </div>
 
                 <!-- Honeypot field (spam protection) -->
-                <input type="text" name="_gotcha" style="display:none">
+                <input type="text" name="bot-field" style="display:none">
+				<input type="hidden" name="form-name" value="contact">
 
                 <button type="submit">Send Message</button>
             </form>
