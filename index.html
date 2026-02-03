@@ -3,541 +3,1176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tabletop Sports Games Archive</title>
-    
-    <!-- Supabase Client Library - KORRIGIERTER LINK -->
+    <title>Tabletop Sports Games Archive - 3311+ Games</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    
-    <!-- React -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- GoatCounter Analytics -->
-    <script data-goatcounter="https://tabletop-sports-games.goatcounter.com/count"
-            async src="//gc.zgo.at/count.js"></script>
-    
+    <script src="supabase-config.js"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #2ecc71 0%, #3498db 100%);
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #f1f1f1;
-            font-size: 1.5rem;
+            padding: 20px;
         }
-        .error {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #ff6b6b;
-            font-size: 1.2rem;
-            padding: 2rem;
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
             text-align: center;
         }
-        .error-details {
-            background: rgba(255, 107, 107, 0.1);
-            border: 1px solid rgba(255, 107, 107, 0.3);
-            borderRadius: 12px;
-            padding: 1.5rem;
-            margin-top: 1rem;
-            max-width: 600px;
-            font-size: 0.9rem;
-            font-family: monospace;
-            text-align: left;
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .header-links {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-link {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .header-link:hover {
+            color: #2ecc71;
+            text-decoration: underline;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+        }
+
+        /* Sidebar Filters */
+        .sidebar {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            height: fit-content;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            position: sticky;
+            top: 20px;
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-search {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+
+        .filter-search:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .filter-section {
+            margin-bottom: 25px;
+        }
+
+        .filter-section h4 {
+            color: #555;
+            margin-bottom: 10px;
+            font-size: 1em;
+            font-weight: 600;
+        }
+
+        .filter-options {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 4px;
+            padding-left: 5px;
+        }
+
+        .filter-option:hover {
+            background: #f5f5f5;
+        }
+
+        .filter-option input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .filter-option label {
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #555;
+            flex: 1;
+        }
+
+        .filter-count {
+            color: #999;
+            font-size: 0.85em;
+            margin-left: auto;
+        }
+
+        .show-more {
+            color: #3498db;
+            cursor: pointer;
+            font-size: 0.85em;
+            margin-top: 8px;
+            display: inline-block;
+            text-decoration: underline;
+        }
+
+        .year-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .year-inputs input {
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        .quick-year {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-year label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .quick-year input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .clear-filters {
+            width: 100%;
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .clear-filters:hover {
+            background: #ff5252;
+        }
+
+        /* Main Content */
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        /* Top Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-container {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+        }
+
+        .view-btn {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .view-btn:hover:not(.active) {
+            background: #e8e8e8;
+        }
+
+        .results-info {
+            color: #666;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+
+        /* Loading & Error States */
+        .loading, .error, .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .loading {
+            font-size: 1.2em;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        /* Grid View */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .game-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+
+        .game-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, #2ecc71 0%, #3498db 100%);
+        }
+
+        .game-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .game-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .game-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: #f0f0f0;
+            color: #555;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        .tag.sport { background: #e3f2fd; color: #1976d2; }
+        .tag.type { background: #f3e5f5; color: #7b1fa2; }
+
+        .game-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .game-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-meta-item strong {
+            color: #444;
+            min-width: 80px;
+        }
+
+        .game-description {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.5;
+            margin-top: auto;
+        }
+
+        /* List View */
+        .games-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .game-card.list-view {
+            flex-direction: row;
+            cursor: pointer;
+            padding: 15px 20px;
+        }
+
+        .game-card.list-view .game-image {
+            display: none;
+        }
+
+        .game-card.list-view .game-content {
+            flex: 1;
+            padding: 0;
+        }
+
+        .game-card.list-view .game-title {
+            font-size: 1.1em;
+            margin-bottom: 8px;
+        }
+
+        .game-card.list-view .game-meta {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .game-card.list-view .game-meta-item {
+            margin: 0;
+        }
+
+        .game-card.list-view .game-description {
+            display: none;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .page-btn {
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #555;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .games-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .game-card.list-view {
+                flex-direction: column;
+            }
+
+            .game-card.list-view .game-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-toggle {
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎮 Tabletop Sports Games Archive</h1>
+            <p class="subtitle">Discover 3311+ BoardGameGeek Sports Games</p>
+            <div class="header-links">
+                <a href="contact.html" class="header-link">📧 Contact</a>
+            </div>
+        </header>
 
-    <!-- Supabase Config laden -->
-    <script src="supabase-config.js"></script>
+        <!-- Main Layout -->
+        <div class="main-layout">
+            <!-- Sidebar Filters -->
+            <aside class="sidebar">
+                <h3>🔍 Filters</h3>
+                
+                <input type="text" class="filter-search" id="filterSearch" placeholder="Search in filters...">
 
-    <script type="text/babel">
-        const { useState, useMemo, useEffect } = React;
+                <!-- Source Filter (MOVED TO TOP) -->
+                <div class="filter-section">
+                    <h4>Source</h4>
+                    <div class="filter-options" id="sourceFilters"></div>
+                </div>
 
-        // Lucide Icons
-        const Search = ({ size = 24 }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.35-4.35"></path>
-            </svg>
-        );
+                <!-- Sport Filter -->
+                <div class="filter-section">
+                    <h4>Sport</h4>
+                    <div class="filter-options" id="sportFilters"></div>
+                    <span class="show-more" id="showMoreSports" style="display: none;">+ Show all</span>
+                </div>
 
-        const Filter = ({ size = 24 }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
-        );
+                <!-- Type Filter -->
+                <div class="filter-section">
+                    <h4>Type</h4>
+                    <div class="filter-options" id="typeFilters"></div>
+                    <span class="show-more" id="showMoreTypes" style="display: none;">+ Show all</span>
+                </div>
 
-        const Mail = ({ size = 24 }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-        );
-
-        const Home = ({ size = 24 }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-            </svg>
-        );
-
-        // Main App
-        function SportsGamesDatabase() {
-            const [games, setGames] = useState([]);
-            const [loading, setLoading] = useState(true);
-            const [error, setError] = useState(null);
-            const [selectedGame, setSelectedGame] = useState(null);
-            const [searchTerm, setSearchTerm] = useState("");
-            const [selectedSport, setSelectedSport] = useState("All");
-            const [selectedType, setSelectedType] = useState("All");
-            const [selectedComplexity, setSelectedComplexity] = useState("All");
-            const [showFilters, setShowFilters] = useState(false);
-
-            useEffect(() => {
-                loadGames();
-            }, []);
-
-            async function loadGames() {
-                try {
-                    setLoading(true);
-                    setError(null);
-
-                    // Check if supabase client exists
-                    if (typeof window.supabaseClient === 'undefined') {
-                        throw new Error('Supabase not connected. Check your supabase-config.js file and API keys.');
-                    }
-
-                    console.log('Loading games from Supabase...');
-                    
-                    const { data, error: fetchError } = await window.supabaseClient
-                        .from('games')
-                        .select('*')
-                        .order('name');
-
-                    if (fetchError) {
-                        console.error('Supabase error:', fetchError);
-                        throw fetchError;
-                    }
-
-                    console.log('✅ Loaded', data?.length || 0, 'games');
-                    setGames(data || []);
-                    
-                } catch (err) {
-                    console.error('❌ Error loading games:', err);
-                    setError(err.message || 'Unknown error');
-                } finally {
-                    setLoading(false);
-                }
-            }
-
-            // Get unique values for filters
-            const sports = useMemo(() => {
-                const unique = [...new Set(games.map(g => g.sport))].filter(Boolean);
-                return ["All", ...unique.sort()];
-            }, [games]);
-
-            const types = useMemo(() => {
-                const unique = [...new Set(games.map(g => g.type))].filter(Boolean);
-                return ["All", ...unique.sort()];
-            }, [games]);
-
-            const complexityLevels = useMemo(() => {
-                const unique = [...new Set(games.map(g => g.complexity))].filter(Boolean);
-                return ["All", ...unique.sort()];
-            }, [games]);
-
-            // Filter games
-            const filteredGames = useMemo(() => {
-                return games.filter(game => {
-                    const matchesSearch = game.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        game.description?.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesSport = selectedSport === "All" || game.sport === selectedSport;
-                    const matchesType = selectedType === "All" || game.type === selectedType;
-                    const matchesComplexity = selectedComplexity === "All" || game.complexity === selectedComplexity;
-                    
-                    return matchesSearch && matchesSport && matchesType && matchesComplexity;
-                });
-            }, [games, searchTerm, selectedSport, selectedType, selectedComplexity]);
-
-            const activeFiltersCount = [selectedSport, selectedType, selectedComplexity].filter(f => f !== "All").length;
-
-            // Loading
-            if (loading) {
-                return (
-                    <div className="loading">
-                        <div>
-                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎲</div>
-                            <div>Loading games from database...</div>
-                        </div>
+                <!-- Year Filter -->
+                <div class="filter-section">
+                    <h4>Year</h4>
+                    <div class="year-inputs">
+                        <input type="number" id="yearFrom" placeholder="From" min="1900" max="2030">
+                        <input type="number" id="yearTo" placeholder="To" min="1900" max="2030">
                     </div>
-                );
-            }
+                    <div class="quick-year">
+                        <label><input type="radio" name="yearQuick" value="recent"> Last 5 years (2020-2025)</label>
+                        <label><input type="radio" name="yearQuick" value="decade"> Last 10 years (2015-2025)</label>
+                        <label><input type="radio" name="yearQuick" value="classic"> Classic (&lt;2000)</label>
+                        <label><input type="radio" name="yearQuick" value="all" checked> All</label>
+                    </div>
+                </div>
 
-            // Error
-            if (error) {
-                return (
-                    <div className="error">
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-                        <div>Error loading games</div>
-                        <div className="error-details">
-                            <strong>Error:</strong> {error}
-                            <br/><br/>
-                            <strong>Troubleshooting:</strong>
-                            <br/>1. Check if supabase-config.js exists
-                            <br/>2. Check if API keys are correct
-                            <br/>3. Check browser console (F12)
-                        </div>
-                        <button 
-                            onClick={loadGames}
-                            style={{
-                                marginTop: '2rem',
-                                padding: '1rem 2rem',
-                                background: '#ff6b6b',
-                                border: 'none',
-                                borderRadius: '12px',
-                                color: '#fff',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Retry
+                <!-- Players Filter -->
+                <div class="filter-section">
+                    <h4>Players</h4>
+                    <div class="filter-options" id="playersFilters"></div>
+                </div>
+
+                <!-- Complexity Filter -->
+                <div class="filter-section">
+                    <h4>Complexity</h4>
+                    <div class="filter-options" id="complexityFilters"></div>
+                </div>
+
+                <!-- Playtime Filter -->
+                <div class="filter-section">
+                    <h4>Playtime</h4>
+                    <div class="filter-options" id="playtimeFilters"></div>
+                </div>
+
+                <button class="clear-filters" onclick="clearAllFilters()">Clear All Filters</button>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Top Bar -->
+                <div class="top-bar">
+                    <div class="search-container">
+                        <input type="text" class="search-bar" id="searchBar" placeholder="Search games by name or description...">
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')">
+                            <span>🔲</span> Grid View
+                        </button>
+                        <button class="view-btn" id="listViewBtn" onclick="setView('list')">
+                            <span>≡</span> List View
                         </button>
                     </div>
-                );
+                </div>
+
+                <div class="results-info" id="resultsInfo">Loading games...</div>
+
+                <!-- Games Container -->
+                <div id="gamesContainer">
+                    <div class="loading">Loading games from database...</div>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination"></div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allGames = [];
+        let filteredGames = [];
+        let currentPage = 1;
+        const gamesPerPage = 50;
+        let currentView = 'grid';
+        
+        // Filter state
+        let filters = {
+            sports: [],
+            types: [],
+            yearFrom: null,
+            yearTo: null,
+            players: [],
+            complexity: [],
+            playtime: [],
+            source: [],
+            search: ''
+        };
+
+        // Initialize
+        async function init() {
+            await loadGames();
+            setupEventListeners();
+        }
+
+        // Load games from Supabase
+        async function loadGames() {
+            try {
+                // Load ALL games - Supabase default limit is 1000, so we need to specify more
+                const { data, error } = await window.supabaseClient
+                    .from('games')
+                    .select('*')
+                    .order('name', { ascending: true })
+                    .limit(10000); // Load up to 10000 games
+
+                if (error) throw error;
+
+                allGames = data;
+                filteredGames = [...allGames];
+                
+                buildFilters();
+                displayGames();
+                updateResultsInfo();
+            } catch (error) {
+                console.error('Error loading games:', error);
+                document.getElementById('gamesContainer').innerHTML = 
+                    '<div class="error">Error loading games. Please refresh the page.</div>';
+            }
+        }
+
+        // Build filter options
+        function buildFilters() {
+            buildSportFilters();
+            buildTypeFilters();
+            buildPlayersFilters();
+            buildComplexityFilters();
+            buildPlaytimeFilters();
+            buildSourceFilters();
+        }
+
+        // Build Sport filters
+        function buildSportFilters() {
+            const sportCounts = {};
+            allGames.forEach(game => {
+                const sports = game.sport ? game.sport.split(';').map(s => s.trim()) : [];
+                sports.forEach(sport => {
+                    sportCounts[sport] = (sportCounts[sport] || 0) + 1;
+                });
+            });
+
+            const sortedSports = Object.entries(sportCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const container = document.getElementById('sportFilters');
+            const showMore = document.getElementById('showMoreSports');
+            
+            const displayCount = 10;
+            sortedSports.forEach(([sport, count], index) => {
+                const option = createFilterOption('sport', sport, count, index >= displayCount);
+                container.appendChild(option);
+            });
+
+            if (sortedSports.length > displayCount) {
+                showMore.style.display = 'inline-block';
+                showMore.onclick = () => {
+                    container.querySelectorAll('.filter-option').forEach(el => el.style.display = 'flex');
+                    showMore.style.display = 'none';
+                };
+            }
+        }
+
+        // Build Type filters
+        function buildTypeFilters() {
+            const typeCounts = {};
+            allGames.forEach(game => {
+                const types = game.type ? game.type.split(';').map(t => t.trim()) : [];
+                types.forEach(type => {
+                    typeCounts[type] = (typeCounts[type] || 0) + 1;
+                });
+            });
+
+            const sortedTypes = Object.entries(typeCounts)
+                .sort((a, b) => b[1] - a[1]);
+
+            const container = document.getElementById('typeFilters');
+            const showMore = document.getElementById('showMoreTypes');
+            
+            const displayCount = 10;
+            sortedTypes.forEach(([type, count], index) => {
+                const option = createFilterOption('type', type, count, index >= displayCount);
+                container.appendChild(option);
+            });
+
+            if (sortedTypes.length > displayCount) {
+                showMore.style.display = 'inline-block';
+                showMore.onclick = () => {
+                    container.querySelectorAll('.filter-option').forEach(el => el.style.display = 'flex');
+                    showMore.style.display = 'none';
+                };
+            }
+        }
+
+        // Build Players filters
+        function buildPlayersFilters() {
+            const playerOptions = [
+                { value: 'solo', label: 'Solo (1 player)', count: 0 },
+                { value: '2', label: '2 players', count: 0 },
+                { value: '3-4', label: '3-4 players', count: 0 },
+                { value: '5+', label: '5+ players', count: 0 }
+            ];
+
+            allGames.forEach(game => {
+                if (!game.players) return;
+                const players = game.players.toLowerCase();
+                
+                if (players === '1') playerOptions[0].count++;
+                if (players === '2' || players.includes('2')) playerOptions[1].count++;
+                if (players.match(/[3-4]/)) playerOptions[2].count++;
+                if (players.match(/[5-9]/) || players.includes('6+')) playerOptions[3].count++;
+            });
+
+            const container = document.getElementById('playersFilters');
+            playerOptions.forEach(({ value, label, count }) => {
+                const option = createFilterOption('players', value, count);
+                option.querySelector('label').textContent = label;
+                container.appendChild(option);
+            });
+        }
+
+        // Build Complexity filters
+        function buildComplexityFilters() {
+            const complexityCounts = {};
+            allGames.forEach(game => {
+                if (game.complexity) {
+                    const comp = game.complexity.trim();
+                    complexityCounts[comp] = (complexityCounts[comp] || 0) + 1;
+                }
+            });
+
+            const container = document.getElementById('complexityFilters');
+            ['Simple', 'Medium', 'Complex', 'Expert'].forEach(complexity => {
+                const count = complexityCounts[complexity] || 0;
+                if (count > 0) {
+                    const option = createFilterOption('complexity', complexity, count);
+                    container.appendChild(option);
+                }
+            });
+        }
+
+        // Build Playtime filters
+        function buildPlaytimeFilters() {
+            const playtimeOptions = [
+                { value: '<30', label: 'Quick (<30 min)', count: 0 },
+                { value: '30-60', label: 'Medium (30-60 min)', count: 0 },
+                { value: '60+', label: 'Long (60+ min)', count: 0 }
+            ];
+
+            allGames.forEach(game => {
+                if (!game.playtime) return;
+                const time = parseInt(game.playtime);
+                
+                if (time < 30) playtimeOptions[0].count++;
+                else if (time >= 30 && time <= 60) playtimeOptions[1].count++;
+                else if (time > 60) playtimeOptions[2].count++;
+            });
+
+            const container = document.getElementById('playtimeFilters');
+            playtimeOptions.forEach(({ value, label, count }) => {
+                const option = createFilterOption('playtime', value, count);
+                option.querySelector('label').textContent = label;
+                container.appendChild(option);
+            });
+        }
+
+        // Build Source filters
+        function buildSourceFilters() {
+            const sourceCounts = {
+                'bgg': allGames.filter(g => g.source === 'bgg').length,
+                'manual': allGames.filter(g => g.source === 'manual').length
+            };
+
+            const container = document.getElementById('sourceFilters');
+            [
+                { value: 'bgg', label: 'BoardGameGeek' },
+                { value: 'manual', label: 'Hidden Games' }
+            ].forEach(({ value, label }) => {
+                const count = sourceCounts[value];
+                const option = createFilterOption('source', value, count);
+                option.querySelector('label').textContent = label;
+                container.appendChild(option);
+            });
+        }
+
+        // Create filter option element
+        function createFilterOption(filterType, value, count, hidden = false) {
+            const div = document.createElement('div');
+            div.className = 'filter-option';
+            if (hidden) div.style.display = 'none';
+            
+            div.innerHTML = `
+                <input type="checkbox" id="${filterType}-${value}" value="${value}" 
+                       onchange="handleFilterChange('${filterType}', '${value}', this.checked)">
+                <label for="${filterType}-${value}">${value}</label>
+                <span class="filter-count">(${count})</span>
+            `;
+            
+            return div;
+        }
+
+        // Handle filter changes
+        function handleFilterChange(filterType, value, checked) {
+            if (checked) {
+                filters[filterType + 's'].push(value);
+            } else {
+                filters[filterType + 's'] = filters[filterType + 's'].filter(v => v !== value);
+            }
+            
+            applyFilters();
+        }
+
+        // Apply all filters
+        function applyFilters() {
+            filteredGames = allGames.filter(game => {
+                // Search filter
+                if (filters.search) {
+                    const searchLower = filters.search.toLowerCase();
+                    const nameMatch = game.name && game.name.toLowerCase().includes(searchLower);
+                    const descMatch = game.description && game.description.toLowerCase().includes(searchLower);
+                    if (!nameMatch && !descMatch) return false;
+                }
+
+                // Sport filter
+                if (filters.sports.length > 0) {
+                    const gameSports = game.sport ? game.sport.split(';').map(s => s.trim()) : [];
+                    if (!filters.sports.some(sport => gameSports.includes(sport))) return false;
+                }
+
+                // Type filter
+                if (filters.types.length > 0) {
+                    const gameTypes = game.type ? game.type.split(';').map(t => t.trim()) : [];
+                    if (!filters.types.some(type => gameTypes.includes(type))) return false;
+                }
+
+                // Year filter
+                if (filters.yearFrom && game.year < filters.yearFrom) return false;
+                if (filters.yearTo && game.year > filters.yearTo) return false;
+
+                // Players filter
+                if (filters.players.length > 0) {
+                    const players = game.players ? game.players.toLowerCase() : '';
+                    let matches = false;
+                    
+                    filters.players.forEach(filter => {
+                        if (filter === 'solo' && players === '1') matches = true;
+                        if (filter === '2' && (players === '2' || players.includes('2'))) matches = true;
+                        if (filter === '3-4' && players.match(/[3-4]/)) matches = true;
+                        if (filter === '5+' && (players.match(/[5-9]/) || players.includes('6+'))) matches = true;
+                    });
+                    
+                    if (!matches) return false;
+                }
+
+                // Complexity filter
+                if (filters.complexity.length > 0) {
+                    if (!filters.complexity.includes(game.complexity)) return false;
+                }
+
+                // Playtime filter
+                if (filters.playtime.length > 0) {
+                    const time = parseInt(game.playtime) || 0;
+                    let matches = false;
+                    
+                    filters.playtime.forEach(filter => {
+                        if (filter === '<30' && time < 30) matches = true;
+                        if (filter === '30-60' && time >= 30 && time <= 60) matches = true;
+                        if (filter === '60+' && time > 60) matches = true;
+                    });
+                    
+                    if (!matches) return false;
+                }
+
+                // Source filter
+                if (filters.source.length > 0) {
+                    if (!filters.source.includes(game.source)) return false;
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+            displayGames();
+            updateResultsInfo();
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            filters = {
+                sports: [],
+                types: [],
+                yearFrom: null,
+                yearTo: null,
+                players: [],
+                complexity: [],
+                playtime: [],
+                source: [],
+                search: ''
+            };
+
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.getElementById('yearFrom').value = '';
+            document.getElementById('yearTo').value = '';
+            document.querySelector('input[name="yearQuick"][value="all"]').checked = true;
+            document.getElementById('searchBar').value = '';
+            document.getElementById('filterSearch').value = '';
+
+            applyFilters();
+        }
+
+        // Display games
+        function displayGames() {
+            const container = document.getElementById('gamesContainer');
+            const startIndex = (currentPage - 1) * gamesPerPage;
+            const endIndex = startIndex + gamesPerPage;
+            const gamesToShow = filteredGames.slice(startIndex, endIndex);
+
+            if (gamesToShow.length === 0) {
+                container.innerHTML = '<div class="no-results">No games found matching your filters.</div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
             }
 
-            // Main view
-            return (
-                <div style={{
-                    minHeight: '100vh',
-                    background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                    color: '#f1f1f1'
-                }}>
-                    {/* Header */}
-                    <header style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                        padding: '2rem 1rem',
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 100
-                    }}>
-                        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                gap: '1rem',
-                                marginBottom: '1rem'
-                            }}>
-                                <h1 style={{
-                                    fontSize: 'clamp(2rem, 5vw, 3.5rem)',
-                                    fontWeight: '900',
-                                    margin: '0',
-                                    background: 'linear-gradient(135deg, #ff6b6b 0%, #ffd93d 50%, #6bcf7f 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    letterSpacing: '-0.02em'
-                                }}>
-                                    Tabletop Sports Games Archive
-                                </h1>
-                                
-                                <nav style={{ display: 'flex', gap: '1rem' }}>
-                                    <a href="index.html" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        padding: '0.75rem 1.25rem',
-                                        background: 'rgba(255, 255, 255, 0.1)',
-                                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                                        borderRadius: '12px',
-                                        color: '#f1f1f1',
-                                        textDecoration: 'none',
-                                        fontWeight: '600'
-                                    }}>
-                                        <Home size={20} /> Home
-                                    </a>
-                                    <a href="contact.html" style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        padding: '0.75rem 1.25rem',
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        color: '#f1f1f1',
-                                        textDecoration: 'none',
-                                        fontWeight: '600'
-                                    }}>
-                                        <Mail size={20} /> Contact
-                                    </a>
-                                </nav>
-                            </div>
-                            
-                            <p style={{
-                                fontSize: '1.1rem',
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                margin: 0
-                            }}>
-                                Your database for tabletop, dice & card sports games
-                            </p>
-                        </div>
-                    </header>
+            const containerClass = currentView === 'grid' ? 'games-grid' : 'games-list';
+            const cardClass = currentView === 'grid' ? '' : 'list-view';
 
-                    <div style={{ maxWidth: '1400px', margin: '2rem auto', padding: '0 1rem' }}>
-                        {/* Search & Filters */}
-                        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                            <div style={{ flex: '1', minWidth: '250px', position: 'relative' }}>
-                                <Search style={{
-                                    position: 'absolute',
-                                    left: '1rem',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    color: 'rgba(255, 255, 255, 0.4)'
-                                }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search games..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '1rem 1rem 1rem 3rem',
-                                        background: 'rgba(255, 255, 255, 0.05)',
-                                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        borderRadius: '12px',
-                                        color: '#f1f1f1',
-                                        fontSize: '1rem',
-                                        outline: 'none'
-                                    }}
-                                />
-                            </div>
-
-                            <button onClick={() => setShowFilters(!showFilters)} style={{
-                                padding: '1rem 1.5rem',
-                                background: activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                                border: `1px solid ${activeFiltersCount > 0 ? 'rgba(255, 107, 107, 0.5)' : 'rgba(255, 255, 255, 0.1)'}`,
-                                borderRadius: '12px',
-                                color: '#f1f1f1',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                fontWeight: '600'
-                            }}>
-                                <Filter size={20} />
-                                Filter {activeFiltersCount > 0 && `(${activeFiltersCount})`}
-                            </button>
-                        </div>
-
-                        {showFilters && (
-                            <div style={{
-                                background: 'rgba(255, 255, 255, 0.05)',
-                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                borderRadius: '12px',
-                                padding: '1.5rem',
-                                marginBottom: '2rem',
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                                gap: '1.5rem'
-                            }}>
-                                <FilterGroup label="Sport" options={sports} selected={selectedSport} onChange={setSelectedSport} />
-                                <FilterGroup label="Type" options={types} selected={selectedType} onChange={setSelectedType} />
-                                <FilterGroup label="Complexity" options={complexityLevels} selected={selectedComplexity} onChange={setSelectedComplexity} />
-                            </div>
-                        )}
-
-                        <p style={{ color: 'rgba(255, 255, 255, 0.6)', marginBottom: '1.5rem' }}>
-                            {filteredGames.length} game{filteredGames.length !== 1 ? 's' : ''} found
-                        </p>
-
-                        {/* Games Grid */}
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                            gap: '2rem'
-                        }}>
-                            {filteredGames.map(game => (
-                                <GameCard key={game.id} game={game} />
-                            ))}
-                        </div>
-
-                        {filteredGames.length === 0 && (
-                            <div style={{
-                                textAlign: 'center',
-                                padding: '4rem 1rem',
-                                color: 'rgba(255, 255, 255, 0.5)'
-                            }}>
-                                <p style={{ fontSize: '1.2rem' }}>No games found</p>
-                                <p>Try different search terms or filters</p>
-                            </div>
-                        )}
-                    </div>
+            container.innerHTML = `
+                <div class="${containerClass}">
+                    ${gamesToShow.map(game => createGameCard(game, cardClass)).join('')}
                 </div>
-            );
+            `;
+
+            displayPagination();
         }
 
-        function FilterGroup({ label, options, selected, onChange }) {
-            return (
-                <div>
-                    <label style={{
-                        display: 'block',
-                        fontSize: '0.85rem',
-                        fontWeight: '600',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        marginBottom: '0.5rem',
-                        textTransform: 'uppercase'
-                    }}>
-                        {label}
-                    </label>
-                    <select value={selected} onChange={(e) => onChange(e.target.value)} style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '8px',
-                        color: '#f1f1f1',
-                        cursor: 'pointer',
-                        outline: 'none'
-                    }}>
-                        {options.map(opt => (
-                            <option key={opt} value={opt} style={{ background: '#16213e' }}>{opt}</option>
-                        ))}
-                    </select>
-                </div>
-            );
-        }
+        // Create game card
+        function createGameCard(game, extraClass = '') {
+            const sports = game.sport ? game.sport.split(';').map(s => s.trim()) : [];
+            const types = game.type ? game.type.split(';').map(t => t.trim()) : [];
+            
+            const shortText = game.subtitle || 
+                             (game.description ? game.description.substring(0, 150) + '...' : 'No description available');
 
-        function GameCard({ game }) {
-            const [isHovered, setIsHovered] = useState(false);
-            const imageUrl = game.images?.[0] || 'https://via.placeholder.com/800x600/333333/ffffff?text=No+Image';
+            const imageUrl = game.thumbnail_url || game.image_url || '';
 
-            return (
-                <div
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        borderRadius: '16px',
-                        overflow: 'hidden',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s',
-                        transform: isHovered ? 'translateY(-8px)' : 'translateY(0)'
-                    }}
-                >
-                    <div style={{
-                        height: '200px',
-                        background: `url(${imageUrl}) center/cover`,
-                        position: 'relative'
-                    }}>
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)'
-                        }} />
+            return `
+                <div class="game-card ${extraClass}" onclick="goToGameDetail(${game.id})">
+                    ${imageUrl ? `<img src="${imageUrl}" alt="${game.name}" class="game-image" loading="lazy">` : 
+                                 '<div class="game-image"></div>'}
+                    <div class="game-content">
+                        <div class="game-title">${game.name}</div>
                         
-                        <div style={{
-                            position: 'absolute',
-                            top: '1rem',
-                            right: '1rem',
-                            background: 'rgba(255, 255, 255, 0.95)',
-                            color: '#1a1a2e',
-                            padding: '0.4rem 0.8rem',
-                            borderRadius: '20px',
-                            fontSize: '0.75rem',
-                            fontWeight: '700',
-                            textTransform: 'uppercase'
-                        }}>
-                            {game.type}
+                        <div class="game-tags">
+                            ${sports.map(s => `<span class="tag sport">${s}</span>`).join('')}
+                            ${types.map(t => `<span class="tag type">${t}</span>`).join('')}
                         </div>
-                    </div>
-
-                    <div style={{ padding: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', color: '#ffd93d', fontWeight: '600' }}>
-                                {game.sport}
-                            </span>
-                            <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
-                            <span style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.5)' }}>
-                                {game.year}
-                            </span>
+                        
+                        <div class="game-meta">
+                            ${game.year ? `<div class="game-meta-item"><strong>Year:</strong> ${game.year}</div>` : ''}
+                            ${game.players ? `<div class="game-meta-item"><strong>Players:</strong> ${game.players}</div>` : ''}
+                            ${game.playtime ? `<div class="game-meta-item"><strong>Playtime:</strong> ${game.playtime} min</div>` : ''}
+                            ${game.complexity ? `<div class="game-meta-item"><strong>Complexity:</strong> ${game.complexity}</div>` : ''}
                         </div>
-
-                        <h3 style={{
-                            fontSize: '1.4rem',
-                            fontWeight: '700',
-                            margin: '0 0 0.75rem 0',
-                            lineHeight: '1.3'
-                        }}>
-                            {game.name}
-                        </h3>
-
-                        {game.subtitle && (
-                            <p style={{
-                                fontSize: '0.9rem',
-                                color: 'rgba(255, 255, 255, 0.6)',
-                                margin: '0 0 0.75rem 0',
-                                fontStyle: 'italic'
-                            }}>
-                                {game.subtitle}
-                            </p>
-                        )}
-
-                        <p style={{
-                            fontSize: '0.95rem',
-                            color: 'rgba(255, 255, 255, 0.7)',
-                            lineHeight: '1.5',
-                            display: '-webkit-box',
-                            WebkitLineClamp: 3,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden'
-                        }}>
-                            {game.description}
-                        </p>
-
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            paddingTop: '1rem',
-                            marginTop: '1rem',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                            fontSize: '0.85rem',
-                            color: 'rgba(255, 255, 255, 0.6)'
-                        }}>
-                            <span>👥 {game.players}</span>
-                            <span>📊 {game.complexity}</span>
-                        </div>
+                        
+                        <div class="game-description">${shortText}</div>
                     </div>
                 </div>
-            );
+            `;
         }
 
-        ReactDOM.render(<SportsGamesDatabase />, document.getElementById('root'));
+        // Display pagination
+        function displayPagination() {
+            const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+            const pagination = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    ← Previous
+                </button>
+            `;
+
+            // Show page numbers
+            const maxButtons = 7;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            
+            if (endPage - startPage < maxButtons - 1) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) html += '<span>...</span>';
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += '<span>...</span>';
+                html += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `
+                <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next →
+                </button>
+            `;
+
+            pagination.innerHTML = html;
+        }
+
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredGames.length / gamesPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            displayGames();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Update results info
+        function updateResultsInfo() {
+            const startIndex = (currentPage - 1) * gamesPerPage + 1;
+            const endIndex = Math.min(currentPage * gamesPerPage, filteredGames.length);
+            const total = filteredGames.length;
+
+            document.getElementById('resultsInfo').textContent = 
+                `Showing ${startIndex}-${endIndex} of ${total} games`;
+        }
+
+        // Set view
+        function setView(view) {
+            currentView = view;
+            document.getElementById('gridViewBtn').classList.toggle('active', view === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', view === 'list');
+            displayGames();
+        }
+
+        // Go to game detail
+        function goToGameDetail(gameId) {
+            window.location.href = `game-detail.html?id=${gameId}`;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Search bar
+            const searchBar = document.getElementById('searchBar');
+            let searchTimeout;
+            searchBar.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    filters.search = e.target.value;
+                    applyFilters();
+                }, 300);
+            });
+
+            // Filter search
+            const filterSearch = document.getElementById('filterSearch');
+            filterSearch.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.filter-option').forEach(option => {
+                    const label = option.querySelector('label').textContent.toLowerCase();
+                    option.style.display = label.includes(searchTerm) ? 'flex' : 'none';
+                });
+            });
+
+            // Year inputs
+            document.getElementById('yearFrom').addEventListener('change', (e) => {
+                filters.yearFrom = e.target.value ? parseInt(e.target.value) : null;
+                applyFilters();
+            });
+
+            document.getElementById('yearTo').addEventListener('change', (e) => {
+                filters.yearTo = e.target.value ? parseInt(e.target.value) : null;
+                applyFilters();
+            });
+
+            // Quick year filters
+            document.querySelectorAll('input[name="yearQuick"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const currentYear = new Date().getFullYear();
+                    switch(e.target.value) {
+                        case 'recent':
+                            filters.yearFrom = 2020;
+                            filters.yearTo = 2025;
+                            break;
+                        case 'decade':
+                            filters.yearFrom = 2015;
+                            filters.yearTo = 2025;
+                            break;
+                        case 'classic':
+                            filters.yearFrom = null;
+                            filters.yearTo = 1999;
+                            break;
+                        default:
+                            filters.yearFrom = null;
+                            filters.yearTo = null;
+                    }
+                    applyFilters();
+                });
+            });
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
